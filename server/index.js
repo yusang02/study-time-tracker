@@ -127,6 +127,20 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// Handle logout
+app.post("/logout", (req, res) => {
+  // Delete the session in the DB
+  req.session.destroy((error) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).json({ error: "Logout failed" });
+    }
+    // Delete the cookie in the browser
+    res.clearCookie("connect.sid");
+    res.json({ message: "Logged out" });
+  });
+});
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}.`);
 });
@@ -153,7 +167,6 @@ app.get("/me", async (req, res) => {
 });
 
 // Test codes
-
 app.get("/test", (req, res) => {
   res.json({ status: "very nice" });
 });
