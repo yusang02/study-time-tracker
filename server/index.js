@@ -2,12 +2,157 @@ import "dotenv/config";
 import db from "./db.js";
 import express from "express";
 import cors from "cors";
+import bcrypt from "bcrypt";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 
 const app = express();
 const port = process.env.PORT || 3000;
+const saltRounds = 12;
+const PgSession = connectPgSimple(session);
+const isProd = process.env.NODE_ENV === "production";
 
-app.use(cors());
+app.use(
+  isProd
+    ? cors({
+        origin:
+          "https://study-time-tracker-kifojen15-study-time-tracker.vercel.app",
+        credentials: true,
+      })
+    : cors(),
+);
 app.use(express.json());
+app.use(
+  session({
+    // Store sessions in Postgres instead of memory
+    store: new PgSession({
+      pool: db,
+      createTableIfMissing: true,
+    }),
+    // Signs the cookie so it can't be forged
+    secret: process.env.SESSION_SECRET,
+    // Don't rewrite unchanged sessions
+    resave: false,
+    // Don't create sessions for visitors who never log in
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      httpOnly: true, // Not readable by JS (XSS defence)
+      sameSite: "lax", // Change to "none" when frontend is on another domain
+      secure: isProd, // HTTPS only
+    },
+  }),
+);
+
+// Handle register
+app.post("/register", async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    // Validate input
+    if (!username || !email || !password) {
+      return res
+        .status(400)
+        .json({ error: "Username, email and password are required" });
+    }
+
+    if (!email.includes("@") || !email.includes(".")) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
+
+    if (typeof password !== "string" || password.length < 8) {
+      return res
+        .status(400)
+        .json({ error: "Password must be at least 8 characters" });
+    }
+
+    // Hash password
+    const hashPass = await bcrypt.hash(password, saltRounds);
+
+    // Insert user
+    const result = await db.query(
+      "INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email",
+      [username, email, hashPass],
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+
+    // Duplicate email or username
+    if (error.code === "23505") {
+      return res.status(409).json({ error: "Email or username already taken" });
+    }
+
+    res.status(500).json({ error: "Registration failed" });
+  }
+});
+
+// Handle login
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    // Find user by email
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
+
+    // Same message as wrong password (don't leak which emails exist)
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    const user = result.rows[0];
+
+    // Compare against the stored hash
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    // Start the session
+    req.session.userId = user.id;
+
+    // Never send password_hash back
+    res.json({ id: user.id, username: user.username, email: user.email });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Login failed" });
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Server running on port ${port}.`);
+});
+
+// Return the currently logged in user
+app.get("/me", async (req, res) => {
+  try {
+    // Not logged in
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    // Find user
+    const result = await db.query(
+      "SELECT id, username, email FROM users WHERE id = $1",
+      [req.session.userId],
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch user" });
+  }
+});
+
+// Test codes
 
 app.get("/test", (req, res) => {
   res.json({ status: "very nice" });
@@ -17,12 +162,8 @@ app.get("/db-test", async (req, res) => {
   try {
     const result = await db.query("SELECT NOW()");
     res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Test failed" });
   }
-});
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}.`);
 });
