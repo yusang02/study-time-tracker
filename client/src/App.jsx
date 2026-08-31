@@ -1,24 +1,15 @@
-import { useEffect, useState } from "react";
-import "./App.css";
+import { Routes, Route } from "react-router-dom";
+import Landing from "./pages/Landing";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 function App() {
-  const [result, setResult] = useState();
-  useEffect(() => {
-    async function load() {
-      const res = await fetch(
-        "https://study-time-tracker-yszp.onrender.com/test",
-      );
-      const result = await res.json();
-      setResult(result);
-    }
-    load();
-  }, []);
-
   return (
-    <>
-      <h1>Study Time Tracker</h1>
-      <p>{result?.status}</p>
-    </>
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+    </Routes>
   );
 }
 

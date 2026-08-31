@@ -1,0 +1,131 @@
+:root {
+  --bg: #1c1c1e;
+  --surface: #2c2c2e;
+  --text: #f2f2f7;
+  --muted: #8e8e93;
+  --accent: #5c5cd6;
+  --danger: #e5484d;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Landing ===== */
+.landing {
+  min-height: 100vh;
+  padding-bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.landing h1 {
+  font-family: "Archivo Black", sans-serif;
+  font-size: 40px;
+}
+
+.landing p {
+  color: var(--muted);
+}
+
+.landing-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.landing-buttons a {
+  min-width: 120px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  text-align: center;
+}
+
+.landing-buttons a.login {
+  background: var(--accent);
+}
+
+/* ===== Auth (Login / Register) ===== */
+.auth {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 70px;
+}
+
+.auth form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 320px;
+}
+
+.auth h1 {
+  font-size: 28px;
+  margin-bottom: 12px;
+  text-align: center;
+  font-weight: Black;
+}
+
+.auth input {
+  padding: 10px 12px;
+  border: 1px solid var(--surface);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+}
+
+.auth input:focus {
+  border-color: var(--accent);
+}
+
+.auth input::placeholder {
+  color: var(--muted);
+}
+
+.auth button {
+  margin-top: 8px;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  background: var(--accent);
+  color: var(--text);
+  font-weight: bold;
+}
+
+.auth-switch {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.auth-switch a {
+  color: var(--accent);
+}
