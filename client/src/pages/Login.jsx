@@ -4,7 +4,7 @@ function Login() {
   return (
     <div className="auth">
       <form>
-        <h1>Welcome back</h1>
+        <h1>Welcome back!</h1>
         <input type="email" placeholder="Email" />
         <input type="password" placeholder="Password" />
         <button type="submit">Login</button>

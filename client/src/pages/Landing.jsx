@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
+import logo from "../assets/logo.svg";
 
 function Landing() {
   return (
     <div className="landing">
+      <img src={logo} alt="로고" className="landing-logo" />
       <h1>Study Time Tracker</h1>
       <p>Start a timer, track your subjects, see your weekly total.</p>
       <div className="landing-buttons">
