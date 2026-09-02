@@ -192,6 +192,32 @@ app.post("/subjects", async (req, res) => {
   }
 });
 
+// Delete a subject for the logged-in user
+app.delete("/subjects/:subject_id", async (req, res) => {
+  try {
+    const { subject_id } = req.params;
+
+    // Check if user is logged in
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    // Delete the subject
+    const result = await db.query(
+      "DELETE FROM subjects WHERE id = $1 AND user_id = $2 RETURNING id",
+      [subject_id, req.session.userId],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Subject not found" });
+    }
+    res.json({ message: "Subject deleted" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to delete subject" });
+  }
+});
+
 // Return all subjects for the logged-in user
 app.get("/subjects", async (req, res) => {
   try {
