@@ -15,13 +15,13 @@ const isProd = process.env.NODE_ENV === "production";
 app.use(
   isProd
     ? cors({
-        origin:
-          "https://study-time-tracker-kifojen15-study-time-tracker.vercel.app",
+        origin: "https://study-time-tracker-ten.vercel.app",
         credentials: true,
       })
     : cors(),
 );
 app.use(express.json());
+if (isProd) app.set("trust proxy", 1);
 app.use(
   session({
     // Store sessions in Postgres instead of memory
@@ -38,7 +38,7 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
       httpOnly: true, // Not readable by JS (XSS defence)
-      sameSite: "lax", // Change to "none" when frontend is on another domain
+      sameSite: isProd ? "none" : "lax",
       secure: isProd, // HTTPS only
     },
   }),
@@ -141,10 +141,6 @@ app.post("/logout", (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}.`);
-});
-
 // Return the currently logged in user
 app.get("/me", async (req, res) => {
   try {
@@ -166,17 +162,6 @@ app.get("/me", async (req, res) => {
   }
 });
 
-// Test codes
-app.get("/test", (req, res) => {
-  res.json({ status: "very nice" });
-});
-
-app.get("/db-test", async (req, res) => {
-  try {
-    const result = await db.query("SELECT NOW()");
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Test failed" });
-  }
+app.listen(port, () => {
+  console.log(`Server running on port ${port}.`);
 });
