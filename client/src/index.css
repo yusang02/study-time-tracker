@@ -158,10 +158,9 @@ body {
 
 .dashboard-header {
   width: 100%;
-  max-width: 480px;
+  max-width: 300px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: center;
   margin-bottom: 64px;
 }
 
@@ -169,9 +168,17 @@ body {
   font-size: 20px;
   font-weight: 600;
   color: #f2f2f7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .logout-btn {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
   background: none;
   border: 1px solid #828286;
   border-radius: 8px;
