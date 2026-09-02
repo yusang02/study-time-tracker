@@ -6,7 +6,11 @@ function Landing() {
     <div className="landing">
       <img src={logo} alt="logo" className="landing-logo" />
       <h1>Study Time Tracker</h1>
-      <p>Start a timer, track your subjects, see your weekly total.</p>
+      <p>
+        Start a timer, track your subjects
+        <br />
+        See your weekly total.
+      </p>
       <div className="landing-buttons">
         <Link to="/login" className="login">
           Login
