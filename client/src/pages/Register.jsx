@@ -7,11 +7,16 @@ function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
-    // 1. Prevent default form submission
+    // Prevent default form submission
     e.preventDefault();
-    // 2. Send POST request to /api/register with username, email, password
+
+    setLoading(true);
+    setError("");
+
+    // Send POST request to /api/register with username, email, password
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/register`, {
         method: "POST",
@@ -24,17 +29,19 @@ function Register() {
 
       const data = await response.json();
 
-      // 3. If successful, redirect to /dashboard
+      // If successful, redirect to /dashboard
       if (response.ok) {
         navigate("/dashboard");
       }
-      // 4. If not successful, show an alert with the error message
+      // If not successful, show an alert with the error message
       else {
         setError(data.error || "Registration failed");
       }
     } catch (error) {
       console.error("Error registering user:", error);
       setError("An error occurred while registering. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -63,7 +70,16 @@ function Register() {
         <small className="hint">At least 8 characters</small>
         <p className="error">{error}</p>
 
-        <button type="submit">Sign up</button>
+        <button type="submit" disabled={loading}>
+          {loading ? (
+            <>
+              <span className="spinner" aria-hidden="true" />
+              Signing up...
+            </>
+          ) : (
+            "Sign up"
+          )}
+        </button>
         <p className="auth-switch">
           Already have an account? <Link to="/login">Login</Link>
         </p>

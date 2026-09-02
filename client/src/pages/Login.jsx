@@ -6,12 +6,16 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
-    // 1. Prevent default form submission
+    // Prevent default form submission
     e.preventDefault();
 
-    // 2. Send POST request to /api/login with email and password
+    setLoading(true);
+    setError("");
+
+    // Send POST request to /api/login with email and password
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
         method: "POST",
@@ -24,17 +28,19 @@ function Login() {
 
       const data = await response.json();
 
-      // 3. If successful, redirect to /login
+      // If successful, redirect to /dashboard
       if (response.ok) {
         navigate("/dashboard");
       }
-      // 4. If not successful, show an alert with the error message
+      // If not successful, show an alert with the error message
       else {
         setError(data.error || "Login failed");
       }
     } catch (error) {
       console.error("Error logging in user:", error);
       setError("An error occurred while logging in. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -56,7 +62,16 @@ function Login() {
         />
         <small className="hint">At least 8 characters</small>
         <p className="error">{error}</p>
-        <button type="submit">Login</button>
+        <button type="submit" disabled={loading}>
+          {loading ? (
+            <>
+              <span className="spinner" aria-hidden="true" />
+              Logging in...
+            </>
+          ) : (
+            "Login"
+          )}
+        </button>
         <p className="auth-switch">
           Don't have an account? <Link to="/register">Register</Link>
         </p>
