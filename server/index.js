@@ -162,6 +162,55 @@ app.get("/me", async (req, res) => {
   }
 });
 
+app.post("/subjects", async (req, res) => {
+  try {
+    const { subjectName } = req.body;
+
+    // Check if user is logged in
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    // Validate input
+    if (!subjectName) {
+      return res.status(400).json({ error: "Subject name is required" });
+    }
+
+    // Insert subject
+    const result = await db.query(
+      "INSERT INTO subjects (user_id, name) VALUES ($1, $2) RETURNING id, name",
+      [req.session.userId, subjectName],
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    if (error.code === "23505") {
+      return res.status(409).json({ error: "Subject already exists" });
+    }
+    console.error(error);
+    res.status(500).json({ error: "Failed to add subject" });
+  }
+});
+
+app.get("/subjects", async (req, res) => {
+  try {
+    // Check if user is logged in
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    // Fetch subjects for the logged-in user
+    const result = await db.query(
+      "SELECT id, name FROM subjects WHERE user_id = $1 ORDER BY created_at",
+      [req.session.userId],
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch subjects" });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}.`);
 });

@@ -8,8 +8,10 @@ function Login() {
   const [error, setError] = useState("");
 
   async function handleSubmit(e) {
+    // 1. Prevent default form submission
     e.preventDefault();
 
+    // 2. Send POST request to /api/login with email and password
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
         method: "POST",
@@ -22,10 +24,11 @@ function Login() {
 
       const data = await response.json();
 
+      // 3. If successful, redirect to /login
       if (response.ok) {
-        navigate("/dashboard"); // Redirect to dashboard on successful login
+        navigate("/dashboard");
       }
-      // Handle failed login
+      // 4. If not successful, show an alert with the error message
       else {
         setError(data.error || "Login failed");
       }
@@ -51,6 +54,7 @@ function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <small className="hint">At least 8 characters</small>
         <p className="error">{error}</p>
         <button type="submit">Login</button>
         <p className="auth-switch">

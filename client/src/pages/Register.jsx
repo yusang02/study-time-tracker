@@ -24,11 +24,11 @@ function Register() {
 
       const data = await response.json();
 
-      // 4. If successful, redirect to /login
+      // 3. If successful, redirect to /login
       if (response.ok) {
         navigate("/login");
       }
-      // 5. If not successful, show an alert with the error message
+      // 4. If not successful, show an alert with the error message
       else {
         setError(data.error || "Registration failed");
       }
