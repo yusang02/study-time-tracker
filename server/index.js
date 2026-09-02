@@ -162,6 +162,7 @@ app.get("/me", async (req, res) => {
   }
 });
 
+// Add a new subject for the logged-in user
 app.post("/subjects", async (req, res) => {
   try {
     const { subjectName } = req.body;
@@ -191,6 +192,7 @@ app.post("/subjects", async (req, res) => {
   }
 });
 
+// Return all subjects for the logged-in user
 app.get("/subjects", async (req, res) => {
   try {
     // Check if user is logged in
@@ -208,6 +210,74 @@ app.get("/subjects", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to fetch subjects" });
+  }
+});
+
+// Create a completed study session
+app.post("/sessions", async (req, res) => {
+  try {
+    const { subject_id, started_at, ended_at, duration_seconds } = req.body;
+    //check if user is logged in
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    // Validate input
+    if (!subject_id || !started_at || !ended_at || !duration_seconds) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    // Check if the subject belongs to the logged-in user
+    const subjectResult = await db.query(
+      "SELECT id FROM subjects WHERE id = $1 AND user_id = $2",
+      [subject_id, req.session.userId],
+    );
+    if (subjectResult.rows.length === 0) {
+      return res.status(404).json({ error: "Subject not found" });
+    }
+
+    // Insert session
+    const result = await db.query(
+      "INSERT INTO study_sessions (user_id, subject_id, started_at, ended_at, duration_seconds) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+      [req.session.userId, subject_id, started_at, ended_at, duration_seconds],
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to create study session" });
+  }
+});
+
+// Update a subject name for the logged-in user
+app.patch("/subjects/:subject_id", async (req, res) => {
+  try {
+    const { subject_id } = req.params;
+    const { subjectName } = req.body;
+
+    // Check if user is logged in
+    if (!req.session.userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    // Validate input
+    if (!subjectName) {
+      return res.status(400).json({ error: "Subject name is required" });
+    }
+
+    // Update subject name
+    const result = await db.query(
+      "UPDATE subjects SET name = $1 WHERE id = $2 AND user_id = $3 RETURNING id, name",
+      [subjectName, subject_id, req.session.userId],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Subject not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update subject" });
   }
 });
 
