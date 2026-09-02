@@ -13,7 +13,7 @@ function Register() {
     e.preventDefault();
     // 2. Send POST request to /api/register with username, email, password
     try {
-      const response = await fetch("/api/register", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
