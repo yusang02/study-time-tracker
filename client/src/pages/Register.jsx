@@ -29,9 +29,9 @@ function Register() {
 
       const data = await response.json();
 
-      // If successful, redirect to /dashboard
+      // If successful, redirect to /login
       if (response.ok) {
-        navigate("/dashboard");
+        navigate("/login");
       }
       // If not successful, show an alert with the error message
       else {

@@ -249,7 +249,7 @@ app.post("/sessions", async (req, res) => {
     }
 
     // Validate input
-    if (!subject_id || !started_at || !ended_at || !duration_seconds) {
+    if (!subject_id || !started_at || !ended_at || duration_seconds == null) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
