@@ -12,6 +12,7 @@ const saltRounds = 12;
 const PgSession = connectPgSimple(session);
 const isProd = process.env.NODE_ENV === "production";
 
+/* middleware */
 app.use(
   isProd
     ? cors({
@@ -43,6 +44,8 @@ app.use(
     },
   }),
 );
+
+/* Before user login */
 
 // Handle register
 app.post("/register", async (req, res) => {
@@ -141,14 +144,20 @@ app.post("/logout", (req, res) => {
   });
 });
 
+/* After user login. Every route below this line requires a logged-in session. */
+
+function requireAuth(req, res, next) {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  next();
+}
+
+app.use(requireAuth);
+
 // Return the currently logged in user
 app.get("/me", async (req, res) => {
   try {
-    // Not logged in
-    if (!req.session.userId) {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
-
     // Find user
     const result = await db.query(
       "SELECT id, username, email FROM users WHERE id = $1",
@@ -166,11 +175,6 @@ app.get("/me", async (req, res) => {
 app.post("/subjects", async (req, res) => {
   try {
     const { subjectName } = req.body;
-
-    // Check if user is logged in
-    if (!req.session.userId) {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
 
     // Validate input
     if (!subjectName) {
@@ -197,11 +201,6 @@ app.delete("/subjects/:subject_id", async (req, res) => {
   try {
     const { subject_id } = req.params;
 
-    // Check if user is logged in
-    if (!req.session.userId) {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
-
     // Delete the subject
     const result = await db.query(
       "DELETE FROM subjects WHERE id = $1 AND user_id = $2 RETURNING id",
@@ -218,20 +217,23 @@ app.delete("/subjects/:subject_id", async (req, res) => {
   }
 });
 
-// Return all subjects for the logged-in user
+// Return all subjects with study sessions for the logged-in user
 app.get("/subjects", async (req, res) => {
   try {
-    // Check if user is logged in
-    if (!req.session.userId) {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
-
     // Fetch subjects for the logged-in user
     const result = await db.query(
-      "SELECT id, name FROM subjects WHERE user_id = $1 ORDER BY created_at",
+      `SELECT s.id, s.name, COALESCE(SUM(ss.duration_seconds), 0) AS total_seconds
+       FROM subjects s
+       LEFT JOIN study_sessions ss ON ss.subject_id = s.id
+       WHERE s.user_id = $1
+       GROUP BY s.id, s.name, s.created_at
+       ORDER BY s.created_at`,
       [req.session.userId],
     );
 
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "No subjects found" });
+    }
     res.json(result.rows);
   } catch (error) {
     console.error(error);
@@ -243,11 +245,6 @@ app.get("/subjects", async (req, res) => {
 app.post("/sessions", async (req, res) => {
   try {
     const { subject_id, started_at, ended_at, duration_seconds } = req.body;
-    //check if user is logged in
-    if (!req.session.userId) {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
-
     // Validate input
     if (!subject_id || !started_at || !ended_at || duration_seconds == null) {
       return res.status(400).json({ error: "All fields are required" });
@@ -279,11 +276,6 @@ app.patch("/subjects/:subject_id", async (req, res) => {
   try {
     const { subject_id } = req.params;
     const { subjectName } = req.body;
-
-    // Check if user is logged in
-    if (!req.session.userId) {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
 
     // Validate input
     if (!subjectName) {

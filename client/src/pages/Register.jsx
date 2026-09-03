@@ -31,7 +31,9 @@ function Register() {
 
       // If successful, redirect to /login
       if (response.ok) {
-        navigate("/login");
+        navigate("/login", {
+          state: { message: "Account created. Please log in." },
+        });
       }
       // If not successful, show an alert with the error message
       else {

@@ -16,9 +16,6 @@ function Dashboard() {
 
   useEffect(() => {
     fetchData();
-  }, []);
-
-  useEffect(() => {
     fetchSubjects();
   }, []);
 
@@ -116,6 +113,7 @@ function Dashboard() {
       setSecond(0);
       setStartTime(null);
       setSelectedSubject(null);
+      await fetchSubjects();
     } catch (error) {
       console.error("Error saving session:", error);
     }
@@ -155,10 +153,8 @@ function Dashboard() {
         setModalError(data.error || "Failed to add subject");
         return;
       }
-
-      const newSubject = await response.json();
-      setSubjects([...subjects, newSubject]);
       setNewSubjectName("");
+      await fetchSubjects();
       setShowModal(false);
     } catch (error) {
       console.error("Error adding subject:", error);
@@ -201,9 +197,6 @@ function Dashboard() {
             ? `Keep going, ${userData?.username}!`
             : `Hello, ${userData?.username}!`}
         </p>
-        <button className="logout-btn" onClick={handleLogout}>
-          Logout
-        </button>
       </div>
       <div className="timer">{formatTime(second)}</div>
       <button
@@ -239,22 +232,34 @@ function Dashboard() {
                 Delete
               </button>
             </div>
-            {subjects.map((subject) => (
-              <button
-                key={subject.id}
-                onClick={() => handleSubjectClick(subject.id)}
-                className={
-                  selectedSubject === subject.id
-                    ? "subject selected"
-                    : "subject"
-                }
-              >
-                {subject.name}
-              </button>
-            ))}
+
+            {subjects.length === 0 ? (
+              <p className="empty-hint">Add a subject to start tracking</p>
+            ) : (
+              subjects.map((subject) => (
+                <button
+                  key={subject.id}
+                  onClick={() => handleSubjectClick(subject.id)}
+                  className={
+                    selectedSubject === subject.id
+                      ? "subject selected"
+                      : "subject"
+                  }
+                >
+                  <span>{subject.name}</span>
+                  <span className="subject-time">
+                    {formatTime(Number(subject.total_seconds))}
+                  </span>
+                </button>
+              ))
+            )}
           </>
         )}
       </div>
+      <button className="logout-btn" onClick={handleLogout}>
+        Logout
+      </button>
+
       {showModal && (
         <div className="modal-overlay">
           <div className="modal">
