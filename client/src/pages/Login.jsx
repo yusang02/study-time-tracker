@@ -1,8 +1,12 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [successMessage, setSuccessMessage] = useState(
+    location.state?.message || "",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -11,7 +15,7 @@ function Login() {
   async function handleSubmit(e) {
     // Prevent default form submission
     e.preventDefault();
-
+    setSuccessMessage("");
     setLoading(true);
     setError("");
 
@@ -61,7 +65,11 @@ function Login() {
           onChange={(e) => setPassword(e.target.value)}
         />
         <small className="hint">At least 8 characters</small>
-        <p className="error">{error}</p>
+        {successMessage ? (
+          <p className="success">{successMessage}</p>
+        ) : (
+          <p className="error">{error}</p>
+        )}
         <button type="submit" disabled={loading}>
           {loading ? (
             <>
